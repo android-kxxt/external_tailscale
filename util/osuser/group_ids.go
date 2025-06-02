@@ -23,6 +23,30 @@ func GetGroupIds(user *user.User) ([]string, error) {
 		return nil, nil
 	}
 
+	// We are hardcoding for shell user
+	if runtime.GOOS == "android" {
+		return []string{
+			"1002", // bluetooth
+			"1005", // audio
+			"1007", // log
+			"1013", // media
+			"1015", // sdcard_rw
+			"1024", // mtp
+			"1065", // reserved_disk
+			"1077", // external_storage
+			"1078", // ext_data_rw
+			"1079", // ext_data_obb
+			"3001", // net_bt_admin
+			"3002", // net_bt
+			"3003", // inet
+			"3007", // net_bt_acct
+			"3010", // wakelock
+			"3011", // uhid
+			"3013", // ???
+			"9997", // everybody
+		}, nil
+	}
+
 	if runtime.GOOS != "linux" {
 		return user.GroupIds()
 	}

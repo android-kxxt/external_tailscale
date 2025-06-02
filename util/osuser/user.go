@@ -97,6 +97,16 @@ func lookup(usernameOrUID string, std lookupStd, wantShell bool) (*user.User, st
 		}, "/bin/rc", nil
 	}
 
+	if runtime.GOOS == "android" {
+		return &user.User{
+			Uid:      "2000",
+			Gid:      "2000",
+			Username: "shell",
+			Name:     "shell",
+			HomeDir:  "/",
+		}, "/system/bin/sh", nil
+	}
+
 	// Start with getent if caller wants to get the user shell.
 	if wantShell {
 		return userLookupGetent(usernameOrUID, std)
