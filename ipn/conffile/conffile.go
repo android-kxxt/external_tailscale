@@ -47,7 +47,7 @@ var hujsonStandardize func([]byte) ([]byte, error)
 // Load reads and parses the config file at the provided path on disk.
 func Load(path string) (*Config, error) {
 	switch runtime.GOOS {
-	case "ios", "android":
+	case "ios":
 		// compile-time for deadcode elimination
 		return nil, fmt.Errorf("config file loading not supported on %q", runtime.GOOS)
 	}

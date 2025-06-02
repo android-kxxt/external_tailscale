@@ -78,7 +78,7 @@ func (h *Handler) serveServeConfig(w http.ResponseWriter, r *http.Request) {
 
 func authorizeServeConfigForGOOSAndUserContext(goos string, configIn *ipn.ServeConfig, h *Handler) error {
 	switch goos {
-	case "windows", "linux", "darwin", "illumos", "solaris":
+	case "windows", "linux", "android", "darwin", "illumos", "solaris":
 	default:
 		return nil
 	}
@@ -98,7 +98,7 @@ func authorizeServeConfigForGOOSAndUserContext(goos string, configIn *ipn.ServeC
 	switch goos {
 	case "windows":
 		return errors.New("must be a Windows local admin to serve a path")
-	case "linux", "darwin", "illumos", "solaris":
+	case "linux", "android", "darwin", "illumos", "solaris":
 		return errors.New("must be root, or be an operator and able to run 'sudo tailscale' to serve a path")
 	default:
 		// We filter goos at the start of the func, this default case
