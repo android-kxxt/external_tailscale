@@ -10,6 +10,7 @@ import (
 	"net/netip"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -1239,6 +1240,28 @@ var (
 // and 'ip rule' implementations (including busybox), don't support
 // checking for the lack of a fwmark, only the presence. The technique
 // below works even on very old kernels.
+//
+// NOTE(kxxt): This doesn't work well with Android. In Android, we have
+//
+// 	    0:      from all lookup local
+// 	*   5210:   from all fwmark 0x80000/0xff0000 lookup main
+// 	*   5230:   from all fwmark 0x80000/0xff0000 lookup default
+// 	*   5250:   from all fwmark 0x80000/0xff0000 unreachable
+// 	*   5270:   from all lookup 52
+// 	    10000:  from all fwmark 0xc0000/0xd0000 lookup legacy_system
+// 	    11000:  from all iif lo oif dummy0 uidrange 0-0 lookup dummy0
+// 	    11000:  from all iif lo oif rmnet_data0 uidrange 0-0 lookup rmnet_data0
+// 	    16000:  from all fwmark 0x10063/0x1ffff iif lo lookup local_network
+// 	    16000:  from all fwmark 0xd0001/0xdffff iif lo lookup rmnet_data0
+// 	    17000:  from all iif lo oif dummy0 lookup dummy0
+// 	    17000:  from all fwmark 0xc0000/0xc0000 iif lo oif rmnet_data0 lookup rmnet_data0
+// 	    18000:  from all fwmark 0x0/0x10000 lookup legacy_system
+// 	    19000:  from all fwmark 0x0/0x10000 lookup legacy_network
+// 	    20000:  from all fwmark 0x0/0x10000 lookup local_network
+// 	    32000:  from all unreachable
+//
+// That directly skipped all android networking rules for packets matching 0x80000/0xff0000
+
 var baseIPRules = []netlink.Rule{
 	// Packets from us, tagged with our fwmark, first try the kernel's
 	// main routing table.
@@ -1275,6 +1298,16 @@ var baseIPRules = []netlink.Rule{
 	// usual rules (pref 32766 and 32767, ie. main and default).
 }
 
+var androidIPRules = []netlink.Rule{
+	// Packets from us, not tagged with our fwmark
+	{
+		Priority: 70,
+		Invert:   true,
+		Mark:     linuxfw.TailscaleBypassMarkNum,
+		Table:    tailscaleRouteTable.Num,
+	},
+}
+
 // ubntIPRules are the policy routing rules that Tailscale uses, when running
 // on a UBNT device.
 //
@@ -1299,6 +1332,8 @@ var ubntIPRules = []netlink.Rule{
 func ipRules() []netlink.Rule {
 	if getDistroFunc() == distro.UBNT {
 		return ubntIPRules
+	} else if runtime.GOOS == "android" {
+		return androidIPRules
 	}
 	return baseIPRules
 }
