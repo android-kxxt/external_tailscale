@@ -70,6 +70,15 @@ buildlinuxloong64: ## Build tailscale CLI for linux/loong64
 buildmultiarchimage: ## Build (and optionally push) multiarch docker image
 	./build_docker.sh
 
+BINARIES = tailscale tailscaled
+AOSP_ARCHES = arm64
+
+prebuiltaosp: ## Build prebuilt binaries for AOSP
+	$(foreach binary,$(BINARIES), \
+		$(foreach arch,$(AOSP_ARCHES), \
+			GOOS=android GOARCH=$(arch) ./build_dist.sh --output prebuilt/$(arch) tailscale.com/cmd/$(binary);))
+		
+
 check: staticcheck vet depaware buildwindows build386 buildlinuxarm buildwasm ## Perform basic checks and compilation tests
 
 staticcheck: ## Run staticcheck.io checks

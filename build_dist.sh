@@ -30,6 +30,7 @@ fi
 
 tags="${TAGS:-}"
 ldflags="-X tailscale.com/version.longStamp=${VERSION_LONG} -X tailscale.com/version.shortStamp=${VERSION_SHORT}"
+output=.
 
 # build_dist.sh arguments must precede go build arguments.
 while [ "$#" -gt 1 ]; do
@@ -59,10 +60,14 @@ while [ "$#" -gt 1 ]; do
 		shift
 		tags="${tags:+$tags,}ts_include_cli"
 		;;
+	--output)
+		output="$2"
+		shift 2
+		;;
 	*)
 		break
 		;;
 	esac
 done
 
-exec $go build ${tags:+-tags=$tags} -trimpath -ldflags "$ldflags" "$@"
+exec $go build ${tags:+-tags=$tags} -o "$output" -trimpath -ldflags "$ldflags" "$@"
