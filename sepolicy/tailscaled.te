@@ -1,0 +1,52 @@
+# Tailscale service
+type tailscaled, domain, coredomain, bpfdomain, relaxeddomain, socket_between_core_and_vendor_violators;
+type tailscaled_exec, exec_type, system_file_type, file_type;
+type tailscaled_data_file, file_type;
+
+net_domain(tailscaled)
+init_daemon_domain(tailscaled)
+file_type_auto_trans(tailscaled, system_data_file, tailscaled_data_file)
+
+# It is very hard to constrain tailscale, which needs to call iptables.
+# In general it runs as root on Linux distros as well.
+permissive tailscaled;
+
+# Silence noisy selinux logs. We won't enforce selinux for tailscale in the future.
+dontaudit tailscaled self:capability_class_set *;
+dontaudit tailscaled self:capability2 *;
+dontaudit tailscaled kernel:security *;
+dontaudit tailscaled { kernel file_type }:system *;
+dontaudit tailscaled self:memprotect *;
+dontaudit tailscaled domain:anon_inode *;
+dontaudit tailscaled domain:{ process process2 } *;
+dontaudit tailscaled domain:fd *;
+dontaudit tailscaled domain:dir *;
+dontaudit tailscaled domain:lnk_file *;
+dontaudit tailscaled domain:{ fifo_file file } *;
+dontaudit tailscaled domain:socket_class_set *;
+dontaudit tailscaled domain:ipc_class_set *;
+dontaudit tailscaled domain:key *;
+dontaudit tailscaled {fs_type fusefs_type}:filesystem *;
+dontaudit tailscaled {fs_type dev_type file_type}:dir_file_class_set *;
+dontaudit tailscaled node_type:node *;
+dontaudit tailscaled node_type:{ tcp_socket udp_socket rawip_socket } *;
+dontaudit tailscaled netif_type:netif *;
+dontaudit tailscaled port_type:socket_class_set *;
+dontaudit tailscaled port_type:{ tcp_socket dccp_socket } *;
+dontaudit tailscaled domain:peer *;
+dontaudit tailscaled domain:binder *;
+dontaudit tailscaled property_type:property_service *;
+dontaudit tailscaled property_type:file *;
+dontaudit tailscaled service_manager_type:service_manager *;
+dontaudit tailscaled hwservice_manager_type:hwservice_manager *;
+dontaudit tailscaled vndservice_manager_type:service_manager *;
+dontaudit tailscaled servicemanager:service_manager list;
+dontaudit tailscaled hwservicemanager:hwservice_manager list;
+dontaudit tailscaled vndservicemanager:service_manager list;
+dontaudit tailscaled keystore:keystore2 *;
+dontaudit tailscaled domain:drmservice *;
+dontaudit tailscaled unlabeled:filesystem *;
+dontaudit tailscaled postinstall_file:filesystem *;
+dontaudit tailscaled domain:bpf *;
+dontaudit tailscaled unlabeled:vsock_socket *;
+dontaudit tailscaled self:perf_event *;

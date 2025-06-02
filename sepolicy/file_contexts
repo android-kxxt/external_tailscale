@@ -1,0 +1,2 @@
+# Tailscale Daemon
+/system_ext/bin/tailscaled u:object_r:tailscaled_exec:s0
