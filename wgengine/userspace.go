@@ -330,7 +330,8 @@ func NewUserspaceEngine(logf logger.Logf, conf Config) (_ Engine, reterr error) 
 	closePool.add(tsTUNDev)
 
 	rtr := conf.Router
-	if version.IsMobile() {
+	// Treating Android as Linux
+	if version.IsMobile() && runtime.GOOS != "android" {
 		// Android and iOS don't handle large numbers of routes well, so we
 		// wrap the Router with one that consolidates routes down to the
 		// smallest number possible.
