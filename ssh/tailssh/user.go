@@ -91,6 +91,9 @@ func defaultPathForUser(u *user.User) string {
 	if runtime.GOOS == "plan9" {
 		return "/bin"
 	}
+	if runtime.GOOS == "android" {
+		return "/sbin:/bin:/product/bin:/system_ext/bin:/system/bin:/odm/bin:/vendor/bin"
+	}
 	isRoot := u.Uid == "0"
 	switch distro.Get() {
 	case distro.Debian:
