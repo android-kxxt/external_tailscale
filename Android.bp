@@ -1,0 +1,18 @@
+package {
+    default_applicable_licenses: ["BSD-3-Clause"],
+}
+
+license {
+    name: "BSD-3-Clause",
+    license_text: [
+        "LICENSE",
+    ]
+}
+
+prebuilt_etc {
+    name: "init.tailscale.rc",
+    src: "init.tailscale.rc",
+    system_ext_specific: true,
+    sub_dir: "init",
+    visibility: ["//visibility:public"],
+}

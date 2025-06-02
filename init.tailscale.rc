@@ -1,0 +1,18 @@
+#
+# Copyright (C) 2025 Levi Zim
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+
+# As late as possible, it won't work until we have network
+on boot
+    mkdir /data/tailscale 0770 root root
+    start tailscaled
+
+service tailscaled /system_ext/bin/tailscaled -verbose 10
+    capabilities NET_ADMIN NET_RAW
+    gentle_kill
+    stdio_to_kmsg
+    setenv HOME /data/tailscale
+    user root
+    group root vpn
