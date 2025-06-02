@@ -10,7 +10,9 @@ on boot
     start tailscaled
 
 service tailscaled /system_ext/bin/tailscaled -verbose 10
-    capabilities NET_ADMIN NET_RAW
+    # NET_ADMIN, NET_RAW: tun and raw socket
+    # SETGID, SETUID: tailscale ssh
+    capabilities NET_ADMIN NET_RAW SETGID SETUID
     gentle_kill
     stdio_to_kmsg
     setenv HOME /data/tailscale
