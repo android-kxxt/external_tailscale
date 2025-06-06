@@ -87,6 +87,8 @@ func (b *LocalBackend) getSSHUsernames(req *tailcfg.C2NSSHUsernamesRequest) (*ta
 			}
 			add(string(line))
 		}
+	case "android":
+		add("shell")
 	default:
 		for lr := range lineiter.File("/etc/passwd") {
 			line, err := lr.Value()
