@@ -3270,7 +3270,7 @@ var _ conn.Bind = (*connBind)(nil)
 func (c *connBind) BatchSize() int {
 	// TODO(raggi): determine by properties rather than hardcoding platform behavior
 	switch runtime.GOOS {
-	case "linux":
+	case "linux", "android":
 		return conn.IdealBatchSize
 	default:
 		return 1

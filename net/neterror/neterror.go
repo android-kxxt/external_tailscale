@@ -26,7 +26,7 @@ func TreatAsLostUDP(err error) bool {
 		return false
 	}
 	switch runtime.GOOS {
-	case "linux":
+	case "linux", "android":
 		// Linux, while not documented in the man page,
 		// returns EPERM when there's an OUTPUT rule with -j
 		// DROP or -j REJECT.  We use this very specific
