@@ -57,6 +57,8 @@ func fixTailscaledConnectErrorImpl(origErr error) error {
 				hint = " (sudo systemctl start tailscaled ?)"
 			}
 			return fmt.Errorf("failed to connect to local tailscaled; it doesn't appear to be running%s", hint)
+		case "android":
+			return fmt.Errorf("failed to connect to local Tailscale service; are you root? is Tailscale running? (hint: setprop ctl.start tailscaled)")
 		}
 		return fmt.Errorf("failed to connect to local tailscaled process; it doesn't appear to be running")
 	}
