@@ -610,6 +610,8 @@ func getPlatformEnvFiles() []string {
 		if buildfeatures.HasSynology && distro.Get() == distro.Synology {
 			return []string{"/etc/tailscale/tailscaled-env.txt"}
 		}
+	case "android":
+		return []string{"/data/tailscale/tailscaled-env.txt"}
 	case "darwin":
 		if version.IsSandboxedMacOS() { // the two GUI variants (App Store or separate download)
 			// On the App Store variant, the home directory is set
