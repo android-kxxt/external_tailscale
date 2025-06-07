@@ -1,7 +1,7 @@
 // Copyright (c) Tailscale Inc & AUTHORS
 // SPDX-License-Identifier: BSD-3-Clause
 
-//go:build linux && !android
+//go:build android
 
 // Package linuxfw returns the kind of firewall being used by the kernel.
 package linuxfw
@@ -14,8 +14,6 @@ import (
 	"strings"
 
 	"github.com/tailscale/netlink"
-	"tailscale.com/feature"
-	"tailscale.com/tsconst"
 	"tailscale.com/types/logger"
 )
 
@@ -61,37 +59,62 @@ const (
 // that sysadmins would use those. Kubernetes uses a few bits in the
 // second byte, so we steer clear of that too.
 //
-// Empirically, most of the documentation on packet marks on the
-// internet gives the impression that the marks are 16 bits
-// wide. Based on this, we theorize that the upper two bytes are
-// relatively unused in the wild, and so we consume bits 16:23 (the
-// third byte).
+// AOSP's code for Fwmark allocation is
+// https://android.googlesource.com/platform/system/netd/+/master/include/Fwmark.h
+//
+//	struct {
+//	    unsigned netId          : 16;
+//	    bool explicitlySelected :  1;
+//	    bool protectedFromVpn   :  1;
+//	    Permission permission   :  2;
+//	    bool uidBillingDone     :  1;
+//	    unsigned reserved       :  8;
+//	    unsigned vendor         :  2;  // reserved for vendor
+//	    bool ingress_cpu_wakeup :  1;  // reserved for config_networkWakeupPacketMark/Mask
+//	};
+//
+// The lower 0-20 bits are already allocated.
+// Bit 21-28 is currently unused.
+// In the future,AOSP is likely to use some of the lower bits of the 8 bits.
+// Tailscale currently reserves 8 bits for its own usage but only uses 4 bits.
+// For max compatibility with future AOSP development, we will use the higher 4 bits
+// of the reserved part.
 //
 // The constants are in the iptables/iproute2 string format for
 // matching and setting the bits, so they can be directly embedded in
 // commands.
 const (
-	fwmarkMask         = tsconst.LinuxFwmarkMask
-	fwmarkMaskNum      = tsconst.LinuxFwmarkMaskNum
-	subnetRouteMark    = tsconst.LinuxSubnetRouteMark
-	subnetRouteMarkNum = tsconst.LinuxSubnetRouteMarkNum
-	bypassMark         = tsconst.LinuxBypassMark
-	bypassMarkNum      = tsconst.LinuxBypassMarkNum
+	// The mask for reading/writing the 'firewall mask' bits on a packet.
+	// See the comment on the const block on why we only use the third byte.
+	//
+	// We claim bits 25:28 entirely.
+	TailscaleFwmarkMask    = "0x1e000000"
+	TailscaleFwmarkMaskNum = 0x1e000000
+
+	// Packet is from Tailscale and to a subnet route destination, so
+	// is allowed to be routed through this machine.
+	TailscaleSubnetRouteMark    = "0x8000000"
+	TailscaleSubnetRouteMarkNum = 0x8000000
+
+	// Packet was originated by tailscaled itself, and must not be
+	// routed over the Tailscale network.
+	TailscaleBypassMark    = "0x10000000"
+	TailscaleBypassMarkNum = 0x10000000
 )
 
 // getTailscaleFwmarkMaskNeg returns the negation of TailscaleFwmarkMask in bytes.
 func getTailscaleFwmarkMaskNeg() []byte {
-	return []byte{0xff, 0x00, 0xff, 0xff}
+	return []byte{0xe1, 0xff, 0xff, 0xff}
 }
 
 // getTailscaleFwmarkMask returns the TailscaleFwmarkMask in bytes.
 func getTailscaleFwmarkMask() []byte {
-	return []byte{0x00, 0xff, 0x00, 0x00}
+	return []byte{0x1e, 0x00, 0x00, 0x00}
 }
 
 // getTailscaleSubnetRouteMark returns the TailscaleSubnetRouteMark in bytes.
 func getTailscaleSubnetRouteMark() []byte {
-	return []byte{0x00, 0x04, 0x00, 0x00}
+	return []byte{0x08, 0x00, 0x00, 0x00}
 }
 
 // checkIPv6ForTest can be set in tests.
@@ -160,7 +183,7 @@ func CheckIPRuleSupportsV6(logf logger.Logf) error {
 	// Try to actually create & delete one as a test.
 	rule := netlink.NewRule()
 	rule.Priority = 1234
-	rule.Mark = bypassMarkNum
+	rule.Mark = TailscaleBypassMarkNum
 	rule.Table = 52
 	rule.Family = netlink.FAMILY_V6
 	// First delete the rule unconditionally, and don't check for
@@ -170,14 +193,4 @@ func CheckIPRuleSupportsV6(logf logger.Logf) error {
 	// And clean up on exit.
 	defer netlink.RuleDel(rule)
 	return netlink.RuleAdd(rule)
-}
-
-var hookIPTablesCleanup feature.Hook[func(logger.Logf)]
-
-// IPTablesCleanUp removes all Tailscale added iptables rules.
-// Any errors that occur are logged to the provided logf.
-func IPTablesCleanUp(logf logger.Logf) {
-	if f, ok := hookIPTablesCleanup.GetOk(); ok {
-		f(logf)
-	}
 }
