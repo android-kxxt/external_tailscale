@@ -44,6 +44,9 @@ client/web/build/assets
 /gocross
 /dist
 
+# AOSP
+/prebuilt
+
 # Ignore xcode userstate and workspace data
 *.xcuserstate
 *.xcworkspacedata
