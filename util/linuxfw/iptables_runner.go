@@ -152,6 +152,9 @@ func (i *iptablesRunner) AddHooks() error {
 		if err := divert(ipt, "filter", "FORWARD"); err != nil {
 			return err
 		}
+		if err := divert(ipt, "mangle", "PREROUTING"); err != nil {
+			return err
+		}
 	}
 
 	for _, ipt := range i.getNATTables() {
@@ -186,6 +189,9 @@ func (i *iptablesRunner) AddChains() error {
 		if err := create(ipt, "filter", "ts-forward"); err != nil {
 			return err
 		}
+		if err := create(ipt, "mangle", "ts-prerouting"); err != nil {
+			return err
+		}
 	}
 
 	for _, ipt := range i.getNATTables() {
@@ -211,6 +217,12 @@ func (i *iptablesRunner) AddBase(tunname string) error {
 	return nil
 }
 
+var (
+	// from all fwmark 0xc0000/0xcffff lookup rmnet_data2
+	// We only set the permission bits. The lower net-id bits are not set as always.
+	androidSystemPermissionMark = "0xc0000"
+)
+
 // addBase4 adds some basic IPv4 processing rules to be
 // supplemented by later calls to other helpers.
 func (i *iptablesRunner) addBase4(tunname string) error {
@@ -233,6 +245,13 @@ func (i *iptablesRunner) addBase4(tunname string) error {
 	args = []string{"-i", tunname, "-j", "ACCEPT"}
 	if err := i.ipt4.Append("filter", "ts-input", args...); err != nil {
 		return fmt.Errorf("adding %v in v4/filter/ts-input: %w", args, err)
+	}
+
+	// Mark packets from tailscale interface with Android system permission\
+	// We need to do so before routing to meet routing requirement(ANDROID_DEFAULT_NETWORK)
+	args = []string{"-i", tunname, "-j", "MARK", "--set-mark", androidSystemPermissionMark + "/" + androidSystemPermissionMark}
+	if err := i.ipt4.Append("mangle", "ts-prerouting", args...); err != nil {
+		return fmt.Errorf("adding %v in v4/mangle/ts-prerouting: %w", args, err)
 	}
 
 	// Forward all traffic from the Tailscale interface, and drop
@@ -352,6 +371,12 @@ func (i *iptablesRunner) addBase6(tunname string) error {
 		return fmt.Errorf("adding %v in v6/filter/ts-input: %w", args, err)
 	}
 
+	// Mark packets from tailscale interface with Android system permission
+	args = []string{"-i", tunname, "-j", "MARK", "--set-mark", androidSystemPermissionMark + "/" + androidSystemPermissionMark}
+	if err := i.ipt6.Append("mangle", "ts-prerouting", args...); err != nil {
+		return fmt.Errorf("adding %v in v6/mangle/ts-prerouting: %w", args, err)
+	}
+
 	args = []string{"-i", tunname, "-j", "MARK", "--set-mark", subnetRouteMark + "/" + fwmarkMask}
 	if err := i.ipt6.Append("filter", "ts-forward", args...); err != nil {
 		return fmt.Errorf("adding %v in v6/filter/ts-forward: %w", args, err)
@@ -377,6 +402,9 @@ func (i *iptablesRunner) DelChains() error {
 			return err
 		}
 		if err := delChain(ipt, "filter", "ts-forward"); err != nil {
+			return err
+		}
+		if err := delChain(ipt, "mangle", "ts-prerouting"); err != nil {
 			return err
 		}
 	}
@@ -412,6 +440,9 @@ func (i *iptablesRunner) DelBase() error {
 		if err := del(ipt, "filter", "ts-forward"); err != nil {
 			return err
 		}
+		if err := del(ipt, "mangle", "ts-prerouting"); err != nil {
+			return err
+		}
 	}
 	for _, ipt := range i.getNATTables() {
 		if err := del(ipt, "nat", "ts-postrouting"); err != nil {
@@ -430,6 +461,9 @@ func (i *iptablesRunner) DelHooks(logf logger.Logf) error {
 			return err
 		}
 		if err := delTSHook(ipt, "filter", "FORWARD", logf); err != nil {
+			return err
+		}
+		if err := delTSHook(ipt, "mangle", "PREROUTING", logf); err != nil {
 			return err
 		}
 	}
