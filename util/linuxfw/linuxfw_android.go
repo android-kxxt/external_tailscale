@@ -88,13 +88,13 @@ const (
 	// See the comment on the const block on why we only use the third byte.
 	//
 	// We claim bits 25:28 entirely.
-	TailscaleFwmarkMask    = "0x1e0c0000"
-	TailscaleFwmarkMaskNum = 0x1e0c0000
+	TailscaleFwmarkMask    = "0x1e000000"
+	TailscaleFwmarkMaskNum = 0x1e000000
 
 	// Packet is from Tailscale and to a subnet route destination, so
 	// is allowed to be routed through this machine.
-	TailscaleSubnetRouteMark    = "0x80c0000"
-	TailscaleSubnetRouteMarkNum = 0x80c0000
+	TailscaleSubnetRouteMark    = "0x8000000"
+	TailscaleSubnetRouteMarkNum = 0x8000000
 
 	// Packet was originated by tailscaled itself, and must not be
 	// routed over the Tailscale network.
@@ -104,17 +104,17 @@ const (
 
 // getTailscaleFwmarkMaskNeg returns the negation of TailscaleFwmarkMask in bytes.
 func getTailscaleFwmarkMaskNeg() []byte {
-	return []byte{0xe1, 0xf3, 0xff, 0xff}
+	return []byte{0xe1, 0xff, 0xff, 0xff}
 }
 
 // getTailscaleFwmarkMask returns the TailscaleFwmarkMask in bytes.
 func getTailscaleFwmarkMask() []byte {
-	return []byte{0x1e, 0x0c, 0x00, 0x00}
+	return []byte{0x1e, 0x00, 0x00, 0x00}
 }
 
 // getTailscaleSubnetRouteMark returns the TailscaleSubnetRouteMark in bytes.
 func getTailscaleSubnetRouteMark() []byte {
-	return []byte{0x08, 0x0c, 0x00, 0x00}
+	return []byte{0x08, 0x00, 0x00, 0x00}
 }
 
 // checkIPv6ForTest can be set in tests.
