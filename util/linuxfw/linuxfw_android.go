@@ -98,8 +98,9 @@ const (
 
 	// Packet was originated by tailscaled itself, and must not be
 	// routed over the Tailscale network.
-	TailscaleBypassMark    = "0x10000000"
-	TailscaleBypassMarkNum = 0x10000000
+	// Also set ProtectedFromVPN bit to avoid going through Android VPN
+	TailscaleBypassMark    = "0x10020000"
+	TailscaleBypassMarkNum = 0x10020000
 )
 
 // getTailscaleFwmarkMaskNeg returns the negation of TailscaleFwmarkMask in bytes.
