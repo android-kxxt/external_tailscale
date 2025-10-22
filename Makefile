@@ -76,7 +76,7 @@ AOSP_ARCHES = arm64
 prebuiltaosp: ## Build prebuilt binaries for AOSP
 	$(foreach binary,$(BINARIES), \
 		$(foreach arch,$(AOSP_ARCHES), \
-			GOOS=android GOARCH=$(arch) ./build_dist.sh --output prebuilt/$(arch) tailscale.com/cmd/$(binary);))
+			GOOS=android GOARCH=$(arch) TAGS=ts_omit_systray ./build_dist.sh --output prebuilt/$(arch) tailscale.com/cmd/$(binary);))
 		
 
 check: staticcheck vet depaware buildwindows build386 buildlinuxarm buildwasm ## Perform basic checks and compilation tests
