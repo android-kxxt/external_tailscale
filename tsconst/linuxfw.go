@@ -38,6 +38,7 @@ const (
 
 	// Packet was originated by tailscaled itself, and must not be
 	// routed over the Tailscale network.
-	LinuxBypassMark    = "0x80000"
-	LinuxBypassMarkNum = 0x80000
+	LinuxBypassMark      = "0x80000"
+	AndroidBypassMarkNum = 0x10020000
+	LinuxBypassMarkNum   = 0x80000
 )

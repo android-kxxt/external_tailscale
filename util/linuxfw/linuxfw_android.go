@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/tailscale/netlink"
+	"tailscale.com/feature"
 	"tailscale.com/types/logger"
 )
 
@@ -88,19 +89,20 @@ const (
 	// See the comment on the const block on why we only use the third byte.
 	//
 	// We claim bits 25:28 entirely.
-	TailscaleFwmarkMask    = "0x1e000000"
-	TailscaleFwmarkMaskNum = 0x1e000000
+	fwmarkMask    = "0x1e000000"
+	fwmarkMaskNum = 0x1e000000
 
 	// Packet is from Tailscale and to a subnet route destination, so
 	// is allowed to be routed through this machine.
-	TailscaleSubnetRouteMark    = "0x8000000"
-	TailscaleSubnetRouteMarkNum = 0x8000000
+	subnetRouteMark = "0x8000000"
+	subnetRouteNum  = 0x8000000
 
 	// Packet was originated by tailscaled itself, and must not be
 	// routed over the Tailscale network.
 	// Also set ProtectedFromVPN bit to avoid going through Android VPN
-	TailscaleBypassMark    = "0x10020000"
-	TailscaleBypassMarkNum = 0x10020000
+	bypassMark    = "0x10020000"
+	bypassMarkNum = 0x10020000
+	// Don't forget to update tsconst/linuxfw.go
 )
 
 // getTailscaleFwmarkMaskNeg returns the negation of TailscaleFwmarkMask in bytes.
@@ -184,7 +186,7 @@ func CheckIPRuleSupportsV6(logf logger.Logf) error {
 	// Try to actually create & delete one as a test.
 	rule := netlink.NewRule()
 	rule.Priority = 1234
-	rule.Mark = TailscaleBypassMarkNum
+	rule.Mark = bypassMarkNum
 	rule.Table = 52
 	rule.Family = netlink.FAMILY_V6
 	// First delete the rule unconditionally, and don't check for
@@ -194,4 +196,14 @@ func CheckIPRuleSupportsV6(logf logger.Logf) error {
 	// And clean up on exit.
 	defer netlink.RuleDel(rule)
 	return netlink.RuleAdd(rule)
+}
+
+var hookIPTablesCleanup feature.Hook[func(logger.Logf)]
+
+// IPTablesCleanUp removes all Tailscale added iptables rules.
+// Any errors that occur are logged to the provided logf.
+func IPTablesCleanUp(logf logger.Logf) {
+	if f, ok := hookIPTablesCleanup.GetOk(); ok {
+		f(logf)
+	}
 }
