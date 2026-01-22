@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"runtime"
 	"sync"
 	"syscall"
 
@@ -111,19 +110,8 @@ func controlC(network, address string, c syscall.RawConn) error {
 	return sockErr
 }
 
-func bypassMark() int {
-	switch runtime.GOOS {
-	case "linux":
-		return tsconst.LinuxBypassMarkNum
-	case "android":
-		return tsconst.AndroidBypassMarkNum
-	default:
-		panic("Not supported")
-	}
-}
-
 func setBypassMark(fd uintptr) error {
-	if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_MARK, bypassMark()); err != nil {
+	if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_MARK, tsconst.LinuxBypassMarkNum); err != nil {
 		return fmt.Errorf("setting SO_MARK bypass: %w", err)
 	}
 	return nil
