@@ -1303,7 +1303,7 @@ var androidIPRules = []netlink.Rule{
 	{
 		Priority: 70,
 		Invert:   true,
-		Mark:     tsconst.AndroidBypassMarkNum,
+		Mark:     tsconst.LinuxBypassMarkNum,
 		Table:    tailscaleRouteTable.Num,
 	},
 }
@@ -1322,7 +1322,7 @@ var ubntIPRules = []netlink.Rule{
 	{
 		Priority: 70,
 		Invert:   true,
-		Mark:     tsconst.AndroidBypassMarkNum,
+		Mark:     tsconst.LinuxBypassMarkNum,
 		Table:    tailscaleRouteTable.Num,
 	},
 }

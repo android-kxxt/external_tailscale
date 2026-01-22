@@ -22,23 +22,45 @@ package tsconst
 // The constants are in the iptables/iproute2 string format for
 // matching and setting the bits, so they can be directly embedded in
 // commands.
+
+// NOTICE: The marks for generic Linux are modified for Android!
+// AOSP's code for Fwmark allocation is
+// https://android.googlesource.com/platform/system/netd/+/master/include/Fwmark.h
+//
+//	struct {
+//	    unsigned netId          : 16;
+//	    bool explicitlySelected :  1;
+//	    bool protectedFromVpn   :  1;
+//	    Permission permission   :  2;
+//	    bool uidBillingDone     :  1;
+//	    unsigned reserved       :  8;
+//	    unsigned vendor         :  2;  // reserved for vendor
+//	    bool ingress_cpu_wakeup :  1;  // reserved for config_networkWakeupPacketMark/Mask
+//	};
+//
+// The lower 0-20 bits are already allocated.
+// Bit 21-28 is currently unused.
+// In the future,AOSP is likely to use some of the lower bits of the 8 bits.
+// Tailscale currently reserves 8 bits for its own usage but only uses 4 bits.
+// For max compatibility with future AOSP development, we will use the higher 4 bits
+// of the reserved part.
+// In addition to that, we also claim the protectedFromVpn bit to avoid going through system VPN
 const (
 	// The mask for reading/writing the 'firewall mask' bits on a packet.
 	// See the comment on the const block on why we only use the third byte.
 	//
 	// We claim bits 16:23 entirely. For now we only use the lower four
 	// bits, leaving the higher 4 bits for future use.
-	LinuxFwmarkMask    = "0xff0000"
-	LinuxFwmarkMaskNum = 0xff0000
+	LinuxFwmarkMask    = "0x1e020000"
+	LinuxFwmarkMaskNum = 0x1e020000
 
 	// Packet is from Tailscale and to a subnet route destination, so
 	// is allowed to be routed through this machine.
-	LinuxSubnetRouteMark    = "0x40000"
-	LinuxSubnetRouteMarkNum = 0x40000
+	LinuxSubnetRouteMark    = "0x8000000"
+	LinuxSubnetRouteMarkNum = 0x8000000
 
 	// Packet was originated by tailscaled itself, and must not be
 	// routed over the Tailscale network.
-	LinuxBypassMark      = "0x80000"
-	AndroidBypassMarkNum = 0x10020000
-	LinuxBypassMarkNum   = 0x80000
+	LinuxBypassMark    = "0x10020000"
+	LinuxBypassMarkNum = 0x10020000
 )
