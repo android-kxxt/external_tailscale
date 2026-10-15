@@ -184,8 +184,8 @@ func (ci *ConnIdentity) IsReadonlyConn(operatorUID string, logf logger.Logf) boo
 		logf("connection from peer with unknown userid; read-only")
 		return ro
 	}
-	if uid == "0" {
-		logf("connection from userid %v; root has access", uid)
+	if uid == "0" || ci.IsAndroidApp() {
+		logf("connection from userid %v; root or platform Tailscale app has access", uid)
 		return rw
 	}
 	if selfUID := os.Getuid(); selfUID != 0 && uid == strconv.Itoa(selfUID) {

@@ -1,0 +1,13 @@
+# The UI has its own app UID and can only access tailscaled through LocalAPI.
+type tailscale_app, domain, coredomain;
+app_domain(tailscale_app)
+net_domain(tailscale_app)
+
+allow tailscale_app app_api_service:service_manager find;
+allow tailscale_app system_api_service:service_manager find;
+allow tailscale_app tailscaled_data_file:dir search;
+allow tailscale_app tailscaled_socket:sock_file write;
+allow tailscale_app tailscaled:unix_stream_socket connectto;
+
+# No daemon state, node keys, or Taildrop spool access from the UI.
+neverallow tailscale_app tailscaled_data_file:file *;

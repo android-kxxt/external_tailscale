@@ -1,0 +1,2 @@
+# levelFrom=user lets the daemon distinguish the primary Android user (user 0).
+user=_app seinfo=platform name=com.tailscale.ipn domain=tailscale_app type=app_data_file levelFrom=user

@@ -111,7 +111,7 @@ func (a *actor) IsLocalSystem() bool {
 
 // IsLocalAdmin implements [ipnauth.Actor].
 func (a *actor) IsLocalAdmin(operatorUID string) bool {
-	return a.isLocalSystem || connIsLocalAdmin(a.logf, a.ci, operatorUID)
+	return a.isLocalSystem || (a.ci != nil && a.ci.IsAndroidApp()) || connIsLocalAdmin(a.logf, a.ci, operatorUID)
 }
 
 // UserID implements [ipnauth.Actor].

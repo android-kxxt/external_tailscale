@@ -6,7 +6,10 @@
 
 # As late as possible, it won't work until we have network
 on boot
-    mkdir /data/tailscale 0770 root root
+    # The UI may traverse to the socket; state files remain private to root.
+    mkdir /data/tailscale 0711 root root
+    chmod 0711 /data/tailscale
+    restorecon_recursive /data/tailscale
     start tailscaled
 
 service tailscaled /system_ext/bin/tailscaled -verbose 10
