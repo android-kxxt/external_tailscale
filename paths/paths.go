@@ -107,7 +107,8 @@ func MakeAutomaticStateDir() bool {
 
 // MkStateDir ensures that dirPath, the daemon's configuration directory
 // containing machine keys etc, both exists and has the correct permissions.
-// We want it to only be accessible to the user the daemon is running under.
+// It is private to the daemon's user, except that Android's default directory
+// permits traversal to the LocalAPI socket. State files remain private.
 func MkStateDir(dirPath string) error {
 	if err := os.MkdirAll(dirPath, 0700); err != nil {
 		return err

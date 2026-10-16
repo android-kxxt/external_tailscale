@@ -74,6 +74,21 @@ func xdgDataHome() string {
 }
 
 func ensureStateDirPermsUnix(dir string) error {
+	return ensureStateDirMode(dir, stateDirPermForOS(dir, runtime.GOOS))
+}
+
+func stateDirPermForOS(dir, goos string) os.FileMode {
+	// Android keeps the LocalAPI socket in the default state directory. Allow
+	// traversal to that socket, but not directory listing or modification.
+	// State files remain 0600; SELinux and SO_PEERSEC restrict socket access.
+	// This must agree with init: NewFileStore reapplies permissions at startup.
+	if goos == "android" && filepath.Clean(dir) == "/data/tailscale" {
+		return 0711
+	}
+	return 0700
+}
+
+func ensureStateDirMode(dir string, perm os.FileMode) error {
 	if filepath.Base(dir) != "tailscale" {
 		return nil
 	}
@@ -84,7 +99,6 @@ func ensureStateDirPermsUnix(dir string) error {
 	if !fi.IsDir() {
 		return fmt.Errorf("expected %q to be a directory; is %v", dir, fi.Mode())
 	}
-	const perm = 0700
 	if fi.Mode().Perm() == perm {
 		// Already correct.
 		return nil

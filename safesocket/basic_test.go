@@ -14,6 +14,21 @@ import (
 // downgradeSDDL is a no-op test helper on non-Windows systems.
 var downgradeSDDL = func() func() { return func() {} }
 
+func TestGOOSUsesPeerCreds(t *testing.T) {
+	// Android uses Linux SO_PEERCRED. Omitting it both makes the socket
+	// root-only and bypasses IsReadonlyConn's peer authorization checks.
+	for _, goos := range []string{"android", "linux", "darwin", "freebsd"} {
+		if !GOOSUsesPeerCreds(goos) {
+			t.Errorf("GOOSUsesPeerCreds(%q) = false", goos)
+		}
+	}
+	for _, goos := range []string{"windows", "plan9", "js"} {
+		if GOOSUsesPeerCreds(goos) {
+			t.Errorf("GOOSUsesPeerCreds(%q) = true", goos)
+		}
+	}
+}
+
 func TestBasics(t *testing.T) {
 	// Make the socket in a temp dir rather than the cwd
 	// so that the test can be run from a mounted filesystem (#2367).
