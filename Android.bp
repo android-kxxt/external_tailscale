@@ -9,6 +9,13 @@ license {
     ]
 }
 
+// The UI depends on this target so a checkout without its companion daemon
+// policy or matching prebuilts fails at build time instead of on the device.
+phony {
+    name: "tailscale-system-ui-support",
+    required: ["tailscaled-system-ui", "init.tailscale.rc"],
+}
+
 prebuilt_etc {
     name: "init.tailscale.rc",
     src: "init.tailscale.rc",
